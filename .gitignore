@@ -1,4 +1,6 @@
 *.bin
 *.gltf
 *.glb
+*.obj
+.idea
 cmake-build-debug
