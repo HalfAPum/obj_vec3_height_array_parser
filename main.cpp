@@ -6,6 +6,7 @@
 
 #include "Face.h"
 #include "Vertice.h"
+#include "intersection/FindIntersectionPoint.h"
 
 using namespace std;
 
@@ -138,23 +139,40 @@ void fill_height_array(const vector<Vertice> &verticeCoordinates, const Face &fa
     }
 }
 
+// int main() {
+//     vector<Vertice> verticeCoordinates;
+//     vector<Face> faceVerticeIndecies;
+//
+//     parse_obj_file(verticeCoordinates, faceVerticeIndecies);
+//
+//     transform_verticie_coordinates_to_map_scale(verticeCoordinates, MAP_SIZE);
+//
+//     // for (auto &face : faceVerticeIndecies) {
+//         fill_height_array(verticeCoordinates, faceVerticeIndecies[0]);
+//     // }
+//
+//     for (auto arr : height_array) {
+//         for (auto e : arr) {
+//             cout << e << ' ';
+//         }
+//         cout << endl;
+//     }
+//
+// }
+
 int main() {
-    vector<Vertice> verticeCoordinates;
-    vector<Face> faceVerticeIndecies;
+    Triangle triangle = {{1, 10, 1}, {2, 5, 0}, {0, 7, 1.95}};
 
-    parse_obj_file(verticeCoordinates, faceVerticeIndecies);
+    FindIntersectionPoint find(triangle);
+    double x = 0.99999;
+    double z = 1;
 
-    transform_verticie_coordinates_to_map_scale(verticeCoordinates, MAP_SIZE);
-
-    // for (auto &face : faceVerticeIndecies) {
-        fill_height_array(verticeCoordinates, faceVerticeIndecies[0]);
-    // }
-
-    for (auto arr : height_array) {
-        for (auto e : arr) {
-            cout << e << ' ';
-        }
-        cout << endl;
+    Point3D intersection;
+    if (find.findIntersectionPoint(x, z, intersection)) {
+        cout << "Intersection point: (" << intersection.x << ", " << intersection.y << ", " << intersection.z << ")" << endl;
+    } else {
+        cout << "No intersection" << endl;
     }
 
+    return 0;
 }
