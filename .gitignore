@@ -3,4 +3,5 @@
 *.glb
 *.obj
 .idea
+*.txt
 cmake-build-debug

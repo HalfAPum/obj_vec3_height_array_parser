@@ -5,6 +5,8 @@
 #ifndef POINT3D_H
 #define POINT3D_H
 
+#include "../Vertice.h"
+
 
 struct Point3D {
     double x, y, z;
@@ -16,6 +18,11 @@ struct Point3D {
         np.z = z - other.z;
         return np;
     }
+
+    Point3D() = default;
+    //Switch y and z from godot x,z,y to algebra x,y,z system
+    explicit Point3D(const Vertice &vertice): x(vertice.x), y(vertice.z), z(vertice.y) {}
+
 };
 
 

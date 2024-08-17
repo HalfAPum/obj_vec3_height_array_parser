@@ -3,6 +3,7 @@
 #include <vector>
 #include <cmath>
 #include <array>
+#include <sstream>
 
 #include "Face.h"
 #include "Vertice.h"
@@ -10,16 +11,25 @@
 
 using namespace std;
 
-constexpr int FLOAT_PRECISION = 10000;
-constexpr int MAP_SIZE = 16;
+const string OBJ_EXT = ".obj";
+const string TEXT_EXT = ".txt";
+
+constexpr int FLOAT_PRECISION = 100;
+constexpr int MAP_SIZE = 8;
 constexpr int Z_AXIS_PRECISION = 2;
+constexpr int PRECISED_MAP_SIZE = MAP_SIZE * Z_AXIS_PRECISION + 1;
 constexpr float PRECISION_STEP = 1.0 / Z_AXIS_PRECISION;
 
 //final array
-array<array<float, MAP_SIZE * Z_AXIS_PRECISION>, MAP_SIZE * Z_AXIS_PRECISION> height_array {};
+array<array<float, PRECISED_MAP_SIZE>, PRECISED_MAP_SIZE> height_array {};
 
-void parse_obj_file(vector<Vertice> &verticeCoordinates, vector<Face> &faceVerticeIndecies) {
-    ifstream map_obj_file ("pos_normal1.obj");
+int get_vertice_index(string &vertice) {
+    //Substract 1 because vector is 0-based.
+    return stoi(vertice.substr(0, vertice.find('/'))) - 1;
+}
+
+void parse_obj_file(const string &file_name, vector<Vertice> &verticeCoordinates, vector<Face> &faceVerticeIndecies) {
+    ifstream map_obj_file (file_name + OBJ_EXT);
     //string because work can start with that char and stream will break later
     string first_char;
 
@@ -43,12 +53,11 @@ void parse_obj_file(vector<Vertice> &verticeCoordinates, vector<Face> &faceVerti
 
             map_obj_file >> vertice1 >> vertice2 >> vertice3;
 
-            //Substract 48 to get real number. Substract 1 because vector is 0-based.
-            int vertice1_index = vertice1[0] - 48 - 1;
-            int vertice2_index = vertice2[0] - 48 - 1;
-            int vertice3_index = vertice3[0] - 48 - 1;
-
-            faceVerticeIndecies.emplace_back(vertice1_index, vertice2_index, vertice3_index);
+            faceVerticeIndecies.emplace_back(
+                get_vertice_index(vertice1),
+                get_vertice_index(vertice2),
+                get_vertice_index(vertice3)
+            );
         } else {
             //skip line
             map_obj_file.ignore(numeric_limits<streamsize>::max(), map_obj_file.widen('\n'));
@@ -100,79 +109,111 @@ void transform_verticie_coordinates_to_map_scale(vector<Vertice> &verticeCoordin
 void fill_height_array(const vector<Vertice> &verticeCoordinates, const Face &face) {
     const auto vertice1 = verticeCoordinates[face.vertice1_index];
     const auto vertice2 = verticeCoordinates[face.vertice2_index];
-    auto vertice3 = verticeCoordinates[face.vertice3_index];
+    const auto vertice3 = verticeCoordinates[face.vertice3_index];
 
-    const float min_x = min(vertice1.x, vertice2.x);
-    const float max_x = max(vertice1.x, vertice2.x);
+    // cout << vertice1 << endl;
+    // cout << vertice2 << endl;
+    // cout << vertice3 << endl;
 
-    const float min_y = min(vertice1.y, vertice2.y);
-    const float max_y = max(vertice1.y, vertice2.y);
+    const float min_x = min(vertice1.x, min(vertice2.x, vertice3.x));
+    const float max_x = max(vertice1.x, max(vertice2.x, vertice3.x));
 
-    for (auto e : verticeCoordinates) {
-        cout << e << endl;
-    }
+    const float min_y = min(vertice1.y, min(vertice2.y, vertice3.y));
+    const float max_y = max(vertice1.y, max(vertice2.y, vertice3.y));
 
-    cout << "---------------" << endl;
-    cout << min_x << endl;
-    cout << max_x << endl;
-    cout << min_y << endl;
-    cout << max_y << endl;
+    const FindIntersectionPoint find_intersection(Triangle(vertice1, vertice2, vertice3));
 
     for (float i = min_x;; i = min(max_x, i + PRECISION_STEP)) {
+        const int i_index = (i * Z_AXIS_PRECISION);
+
         for (float j = min_y;; j = min(max_y, j + PRECISION_STEP)) {
-            cout << i << j << endl;
-            // const int i_index = i * Z_AXIS_PRECISION;
-            // const int j_index = j * Z_AXIS_PRECISION;
-            // if (height_array[i_index][j_index] != 0.0) {
-            //     if (j == max_y) break;
-            //
-            //     continue;
-            // }
-    //
-    //         height_array[i_index][j_index] = vertice1.z;
-    //
-    //         //do real calculation of height at this point here
+            const int j_index = (j * Z_AXIS_PRECISION);
+
+            if (height_array[i_index][j_index] != 0.0) {
                 if (j == max_y) break;
+                continue;
             }
-    //
+
+            // cout << i << ' ' << j << endl;
+
+            Point3D intersection {};
+
+            if (find_intersection.findIntersectionPoint(i, j, intersection)) {
+                height_array[i_index][j_index] = intersection.y;
+                // cout << "Intersection point: (" << intersection.x << ", " << intersection.y << ", " << intersection.z << ")" << endl;
+            } else {
+                // cout << "No intersection" << endl;
+            }
+
+            if (j == max_y) break;
+        }
         if (i == max_x) break;
     }
 }
 
-// int main() {
-//     vector<Vertice> verticeCoordinates;
-//     vector<Face> faceVerticeIndecies;
-//
-//     parse_obj_file(verticeCoordinates, faceVerticeIndecies);
-//
-//     transform_verticie_coordinates_to_map_scale(verticeCoordinates, MAP_SIZE);
-//
-//     // for (auto &face : faceVerticeIndecies) {
-//         fill_height_array(verticeCoordinates, faceVerticeIndecies[0]);
-//     // }
-//
-//     for (auto arr : height_array) {
-//         for (auto e : arr) {
-//             cout << e << ' ';
-//         }
-//         cout << endl;
-//     }
-//
-// }
+void print_array(ostream &os) {
+    for (auto arr : height_array) {
+        for (auto e : arr) {
+            auto rounded = roundf(e * FLOAT_PRECISION) / FLOAT_PRECISION;
+
+            ostringstream oss;
+            oss << rounded;
+            string rs = oss.str();
+
+            os << rs;
+
+            if (rs.size() < 4) {
+                auto i = rs.size();
+                if (rs.find('.') == std::string::npos) {
+                    os << '.';
+                    ++i;
+                }
+
+                for (;i<4; ++i) {
+                    os << 0;
+                }
+            }
+
+            os << ' ';
+        }
+        os << endl;
+    }
+}
+
+const string METADATA = "METADATA";
+const string METADATA_MAP_SIZE = "MAP_SIZE ";
+const string METADATA_Z_AXIS_PRECISION = "Z_AXIS_PRECISION ";
+const string METADATA_PRECISED_MAP_SIZE = "PRECISED_MAP_SIZE ";
+const string METADATA_PRECISION_STEP = "PRECISION_STEP ";
+
+void write_array_to_file(const string &file_name) {
+    ofstream file (file_name + TEXT_EXT);
+
+    file << METADATA << endl;
+    file << METADATA_MAP_SIZE << MAP_SIZE << endl;
+    file << METADATA_Z_AXIS_PRECISION << Z_AXIS_PRECISION << endl;
+    file << METADATA_PRECISED_MAP_SIZE << PRECISED_MAP_SIZE << endl;
+    file << METADATA_PRECISION_STEP << PRECISION_STEP << endl;
+    file << METADATA << endl;
+
+    file << endl;
+
+    print_array(file);
+}
 
 int main() {
-    Triangle triangle = {{1, 10, 1}, {2, 5, 0}, {0, 7, 1.95}};
+    vector<Vertice> verticeCoordinates;
+    vector<Face> faceVerticeIndecies;
 
-    FindIntersectionPoint find(triangle);
-    double x = 0.99999;
-    double z = 1;
+    const string file_name = "pos_normal1";
 
-    Point3D intersection;
-    if (find.findIntersectionPoint(x, z, intersection)) {
-        cout << "Intersection point: (" << intersection.x << ", " << intersection.y << ", " << intersection.z << ")" << endl;
-    } else {
-        cout << "No intersection" << endl;
+    parse_obj_file(file_name, verticeCoordinates, faceVerticeIndecies);
+
+    transform_verticie_coordinates_to_map_scale(verticeCoordinates, MAP_SIZE);
+
+    for (auto &face : faceVerticeIndecies) {
+        fill_height_array(verticeCoordinates, face);
     }
 
-    return 0;
+    write_array_to_file(file_name);
 }
