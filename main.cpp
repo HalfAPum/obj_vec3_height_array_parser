@@ -196,8 +196,6 @@ void write_array_to_file(const string &file_name) {
     file << METADATA_PRECISION_STEP << PRECISION_STEP << endl;
     file << METADATA << endl;
 
-    file << endl;
-
     print_array(file);
 }
 
