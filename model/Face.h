@@ -26,8 +26,6 @@ public:
 
 };
 
-std::ostream& operator<<(std::ostream &os, const Face &face) {
-    return os << '(' << face.vertice1_index << ", " << face.vertice2_index << ", " << face.vertice3_index << ')';
-}
+std::ostream& operator<<(std::ostream &os, const Face &face);
 
 #endif //FACE_H

@@ -18,9 +18,7 @@ public:
 
 };
 
-inline std::ostream& operator<<(std::ostream &os, const Vertice &vector) {
-    return os << '(' << vector.x << ", " << vector.z << ", " << vector.y << ')';
-}
+inline std::ostream& operator<<(std::ostream &os, const Vertice &vector);
 
 
 #endif //VERTICE_H

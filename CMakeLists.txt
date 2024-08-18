@@ -3,10 +3,14 @@ project(gltf_plus_binary_parser)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(gltf_plus_binary_parser height_array.cpp
-        Face.h
-        Vertice.h
+add_executable(gltf_plus_binary_parser main.cpp
+        height_array.h
+        model/Face.h
+        model/Vertice.h
         intersection/Triangle.h
         intersection/Point3D.h
         intersection/FindIntersectionPoint.cpp
+        height_array.cpp
+        model/Vertice.cpp
+        model/Face.cpp
 )

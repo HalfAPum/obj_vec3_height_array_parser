@@ -1,3 +1,8 @@
+//
+// Created by o.narvatov on 8/18/2024.
+//
+#include "height_array.h"
+
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -5,30 +10,16 @@
 #include <array>
 #include <sstream>
 
-#include "Face.h"
-#include "Vertice.h"
+#include "model/Face.h"
+#include "model/Vertice.h"
 #include "intersection/FindIntersectionPoint.h"
 
-using namespace std;
-
-const string OBJ_EXT = ".obj";
-const string TEXT_EXT = ".txt";
-
-constexpr int FLOAT_PRECISION = 100;
-constexpr int MAP_SIZE = 256;
-constexpr int Z_AXIS_PRECISION = 10;
-constexpr int PRECISED_MAP_SIZE = MAP_SIZE * Z_AXIS_PRECISION + 1;
-constexpr float PRECISION_STEP = 1.0 / Z_AXIS_PRECISION;
-
-//final array
-array<array<float, PRECISED_MAP_SIZE>, PRECISED_MAP_SIZE> height_array {};
-
-int get_vertice_index(string &vertice) {
+inline int get_vertice_index(string &vertice) {
     //Substract 1 because vector is 0-based.
     return stoi(vertice.substr(0, vertice.find('/'))) - 1;
 }
 
-void parse_obj_file(const string &file_name, vector<Vertice> &verticeCoordinates, vector<Face> &faceVerticeIndecies) {
+inline void parse_obj_file(const string &file_name, vector<Vertice> &verticeCoordinates, vector<Face> &faceVerticeIndecies) {
     ifstream map_obj_file (file_name + OBJ_EXT);
     //string because work can start with that char and stream will break later
     string first_char;
@@ -65,7 +56,7 @@ void parse_obj_file(const string &file_name, vector<Vertice> &verticeCoordinates
     }
 }
 
-void transform_verticie_coordinates_to_map_scale(vector<Vertice> &verticeCoordinates, const int map_size) {
+inline void transform_verticie_coordinates_to_map_scale(vector<Vertice> &verticeCoordinates, const int map_size) {
     //find min/max
     float min_x = verticeCoordinates[0].x;
     float min_z = verticeCoordinates[0].z;
@@ -106,7 +97,7 @@ void transform_verticie_coordinates_to_map_scale(vector<Vertice> &verticeCoordin
     }
 }
 
-void fill_height_array(const vector<Vertice> &verticeCoordinates, const Face &face) {
+inline void fill_height_array(z_axis_array* height_array, const vector<Vertice> &verticeCoordinates, const Face &face) {
     const auto vertice1 = verticeCoordinates[face.vertice1_index];
     const auto vertice2 = verticeCoordinates[face.vertice2_index];
     const auto vertice3 = verticeCoordinates[face.vertice3_index];
@@ -129,7 +120,7 @@ void fill_height_array(const vector<Vertice> &verticeCoordinates, const Face &fa
         for (float j = min_y;; j = min(max_y, j + PRECISION_STEP)) {
             const int j_index = (j * Z_AXIS_PRECISION);
 
-            if (height_array[i_index][j_index] != 0.0) {
+            if ((*height_array)[i_index][j_index] != 0.0) {
                 if (j == max_y) break;
                 continue;
             }
@@ -139,7 +130,7 @@ void fill_height_array(const vector<Vertice> &verticeCoordinates, const Face &fa
             Point3D intersection {};
 
             if (find_intersection.findIntersectionPoint(i, j, intersection)) {
-                height_array[i_index][j_index] = intersection.y;
+                (*height_array)[i_index][j_index] = intersection.y;
                 // cout << "Intersection point: (" << intersection.x << ", " << intersection.y << ", " << intersection.z << ")" << endl;
             } else {
                 // cout << "No intersection" << endl;
@@ -151,8 +142,8 @@ void fill_height_array(const vector<Vertice> &verticeCoordinates, const Face &fa
     }
 }
 
-void print_array(ostream &os) {
-    for (auto arr : height_array) {
+void Height_Array::print_array(z_axis_array* height_array, ostream &os) {
+    for (auto &arr : *height_array) {
         for (auto e : arr) {
             auto rounded = roundf(e * FLOAT_PRECISION) / FLOAT_PRECISION;
 
@@ -186,46 +177,33 @@ const string METADATA_Z_AXIS_PRECISION = "Z_AXIS_PRECISION ";
 const string METADATA_PRECISED_MAP_SIZE = "PRECISED_MAP_SIZE ";
 const string METADATA_PRECISION_STEP = "PRECISION_STEP ";
 
-void write_array_to_file(const string &file_name) {
+void Height_Array::write_array_to_file(z_axis_array* height_array, const string &file_name) {
     ofstream file (file_name + TEXT_EXT);
 
     file << METADATA << endl;
-    file << METADATA_MAP_SIZE << MAP_SIZE << endl;
+    file << METADATA_MAP_SIZE << MAP_SIZE_H_A << endl;
     file << METADATA_Z_AXIS_PRECISION << Z_AXIS_PRECISION << endl;
     file << METADATA_PRECISED_MAP_SIZE << PRECISED_MAP_SIZE << endl;
     file << METADATA_PRECISION_STEP << PRECISION_STEP << endl;
     file << METADATA << endl;
 
-    print_array(file);
+    print_array(height_array, file);
 }
 
-int main() {
-    vector<Vertice> verticeCoordinates;
-    vector<Face> faceVerticeIndecies;
+z_axis_array* Height_Array::get_height_array() {
+    const string& file_name = "pos_normal1";
+    auto* height_array = new z_axis_array{};
 
-    const string file_name = "pos_normal1";
 
-    parse_obj_file(file_name, verticeCoordinates, faceVerticeIndecies);
-
-    transform_verticie_coordinates_to_map_scale(verticeCoordinates, MAP_SIZE);
-
-    for (auto &face : faceVerticeIndecies) {
-        fill_height_array(verticeCoordinates, face);
-    }
-
-    write_array_to_file(file_name);
-}
-
-array<array<float, PRECISED_MAP_SIZE>, PRECISED_MAP_SIZE> get_height_array(const string& file_name = "pos_normal1") {
     vector<Vertice> verticeCoordinates;
     vector<Face> faceVerticeIndecies;
 
     parse_obj_file(file_name, verticeCoordinates, faceVerticeIndecies);
 
-    transform_verticie_coordinates_to_map_scale(verticeCoordinates, MAP_SIZE);
+    transform_verticie_coordinates_to_map_scale(verticeCoordinates, MAP_SIZE_H_A);
 
     for (auto &face : faceVerticeIndecies) {
-        fill_height_array(verticeCoordinates, face);
+        fill_height_array(height_array, verticeCoordinates, face);
     }
 
     // write_array_to_file(file_name);

@@ -6,7 +6,7 @@
 #define TRIANGLE_H
 
 #include "Point3D.h"
-#include "../Vertice.h"
+#include "../model/Vertice.h"
 
 
 struct Triangle {
