@@ -2,6 +2,7 @@
 *.gltf
 *.glb
 *.obj
+*.mlt
 .idea
 *.txt
 cmake-build-debug

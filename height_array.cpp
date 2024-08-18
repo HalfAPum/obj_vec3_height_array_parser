@@ -15,8 +15,8 @@ const string OBJ_EXT = ".obj";
 const string TEXT_EXT = ".txt";
 
 constexpr int FLOAT_PRECISION = 100;
-constexpr int MAP_SIZE = 8;
-constexpr int Z_AXIS_PRECISION = 2;
+constexpr int MAP_SIZE = 256;
+constexpr int Z_AXIS_PRECISION = 10;
 constexpr int PRECISED_MAP_SIZE = MAP_SIZE * Z_AXIS_PRECISION + 1;
 constexpr float PRECISION_STEP = 1.0 / Z_AXIS_PRECISION;
 
@@ -214,4 +214,21 @@ int main() {
     }
 
     write_array_to_file(file_name);
+}
+
+array<array<float, PRECISED_MAP_SIZE>, PRECISED_MAP_SIZE> get_height_array(const string& file_name = "pos_normal1") {
+    vector<Vertice> verticeCoordinates;
+    vector<Face> faceVerticeIndecies;
+
+    parse_obj_file(file_name, verticeCoordinates, faceVerticeIndecies);
+
+    transform_verticie_coordinates_to_map_scale(verticeCoordinates, MAP_SIZE);
+
+    for (auto &face : faceVerticeIndecies) {
+        fill_height_array(verticeCoordinates, face);
+    }
+
+    // write_array_to_file(file_name);
+
+    return height_array;
 }
