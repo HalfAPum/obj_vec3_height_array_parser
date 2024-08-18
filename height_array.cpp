@@ -130,7 +130,7 @@ inline void fill_height_array(z_axis_array* height_array, const vector<Vertice> 
             Point3D intersection {};
 
             if (find_intersection.findIntersectionPoint(i, j, intersection)) {
-                (*height_array)[i_index][j_index] = intersection.y;
+                (*height_array)[i_index][j_index] = intersection.y / 2;
                 // cout << "Intersection point: (" << intersection.x << ", " << intersection.y << ", " << intersection.z << ")" << endl;
             } else {
                 // cout << "No intersection" << endl;
