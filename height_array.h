@@ -11,7 +11,7 @@ const string TEXT_EXT = ".txt";
 
 constexpr int FLOAT_PRECISION = 100;
 constexpr int MAP_SIZE_H_A = 256;
-constexpr int Z_AXIS_PRECISION = 10;
+constexpr int Z_AXIS_PRECISION = 5;
 constexpr int PRECISED_MAP_SIZE = MAP_SIZE_H_A * Z_AXIS_PRECISION + 1;
 constexpr float PRECISION_STEP = 1.0 / Z_AXIS_PRECISION;
 
