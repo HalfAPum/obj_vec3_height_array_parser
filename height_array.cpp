@@ -190,8 +190,7 @@ void Height_Array::write_array_to_file(z_axis_array* height_array, const string 
     print_array(height_array, file);
 }
 
-z_axis_array* Height_Array::get_height_array() {
-    const string& file_name = "pos_normal1";
+z_axis_array* Height_Array::get_height_array(const string& file_name) {
     auto* height_array = new z_axis_array{};
 
 
@@ -206,7 +205,7 @@ z_axis_array* Height_Array::get_height_array() {
         fill_height_array(height_array, verticeCoordinates, face);
     }
 
-    // write_array_to_file(file_name);
+    write_array_to_file(file_name);
 
     return height_array;
 }

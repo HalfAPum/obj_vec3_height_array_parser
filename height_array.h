@@ -23,7 +23,7 @@ public:
 
     void write_array_to_file(z_axis_array* height_array, const string &file_name);
 
-    z_axis_array* get_height_array();
+    static z_axis_array* get_height_array(const string& file_name);
 };
 
 #endif
